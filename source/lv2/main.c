@@ -189,7 +189,7 @@ int main(){
 
     console_clrscr();
     printf(" ______________________________________\n|                                      |\n|  XeLL RELOADED - Xenon Linux Loader  |\n|         https://x360labs.com         |\n|______________________________________|\n\n");
-    check_temps()
+    check_temps();
     
 #ifndef NO_PRINT_CONFIG
     printf("\n * FUSES - write them down and keep them safe:\n");
