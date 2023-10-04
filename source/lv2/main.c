@@ -59,6 +59,7 @@ char CBLDV[17]; // 16 + terminate
 char FGLDV[80];
 int cbldvcount;
 int fgldvcount;
+float CPU_TMP = 0, GPU_TMP = 0, MEM_TMP = 0, MOBO_TMP = 0;
 
 unsigned char stacks[6][0x10000];
 
@@ -84,6 +85,22 @@ void synchronize_timebases()
     reset_timebase_task(); // don't forget thread 0
 		    
     std((void*)0x200611a0,0x1ff); // restart timebase
+}
+
+void check_temps() {
+    memset(buf, 0, 16);
+
+    buf[0] = 0x07;
+
+    xenon_smc_send_message(buf);
+    xenon_smc_receive_response(buf);
+
+    CPU_TMP = (float)((buf[0 * 2 + 1] | (buf[0 * 2 + 2] << 8)) / 256.0);
+    GPU_TMP = (float)((buf[1 * 2 + 1] | (buf[1 * 2 + 2] << 8)) / 256.0);
+    MEM_TMP = (float)((buf[2 * 2 + 1] | (buf[2 * 2 + 2] << 8)) / 256.0);
+    MOBO_TMP = (float)((buf[3 * 2 + 1] | (buf[3 * 2 + 2] << 8)) / 256.0);
+
+    printf("CPU = %4.2f C GPU = %4.2f C MEM = %4.2f C Mobo = %4.2f C", CPU_TMP, GPU_TMP, MEM_TMP, MOBO_TMP);
 }
     
 int main(){
@@ -117,7 +134,7 @@ int main(){
     console_set_colors(CONSOLE_COLOR_BLACK,CONSOLE_COLOR_PINK); // Pink text on black bg
 #elif defined DEFAULT_THEME
     console_set_colors(CONSOLE_COLOR_BLUE,CONSOLE_COLOR_WHITE); // White text on blue bg
-#else
+#elif defined XORO_THEME
     console_set_colors(CONSOLE_COLOR_BLACK,CONSOLE_COLOR_GREEN); // Green text on black bg
 #endif
     console_init();
@@ -171,7 +188,8 @@ int main(){
     /*int device_list_size = */ findDevices();
 
     console_clrscr();
-    printf(" ______________________________________\n|                                      |\n|  XeLL RELOADED - Xenon Linux Loader  |\n|______________________________________|\n"); // Fancy
+    printf(" ______________________________________\n|                                      |\n|  XeLL RELOADED - Xenon Linux Loader  |\n|         https://x360labs.com         |\n|______________________________________|\n\n");
+    check_temps()
     
 #ifndef NO_PRINT_CONFIG
     printf("\n * FUSES - write them down and keep them safe:\n");
@@ -233,7 +251,7 @@ int main(){
     } else if (xenon_get_console_type() == 6) {
 	    printf(" * Console: Corona MMC\n");
     } else if (xenon_get_console_type() == 7) {
-	    printf(" * Console: Winchester - how did you get here???\n");
+	    printf(" * Console: Winchester - how tf did you get here???\n");
     } else if (xenon_get_console_type() == -1) {
 	    printf(" * Console: Unknown\n");
     }
